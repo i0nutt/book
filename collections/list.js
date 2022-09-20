@@ -1,12 +1,15 @@
+//var used to preserve current app
 var app = app || {};
 $       = jQuery;
 
+//creating the library
 let Library = Backbone.Collection.extend(
 	{
 		model: app.BookModel,
 		initialize: function () {
 			this.load();
 		},
+		//get ajx request to load the data from wp post meta using post id in route
 		load: function () {
 			let library = this;
 			$.ajax(
@@ -16,12 +19,13 @@ let Library = Backbone.Collection.extend(
 					data: {},
 					success: function (response) {
 						response = JSON.parse(response);
-						console.log(response);
 						if (response === false) {
 							return;
 						}
+						//assoc array, need for this kind of for
 						for (let key in response) {
-								let book  = response[key];
+								let book = response[key];
+								//used to find a non-used id
 								global    = Math.max(global,book.id);
 								let model = new app.BookModel(
 									{

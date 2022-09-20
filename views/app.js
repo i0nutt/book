@@ -1,37 +1,40 @@
 $       = jQuery;
 var app = app || {};
-
+//app, here is the main processing/event-handler place of the entire collection
 app.MyApp = Backbone.View.extend({
 	el: $('#book-app'),
+	//initialize the app view
 	initialize: function () {
 		this.Library   = app.Library;
 		this.BookModel = app.BookModel;
 		this.BookItem  = app.BookItem;
+		//listener for create, append item to table
 		this.listenTo(this.Library, 'add', (model) => {
 			this.renderItem(model);
 		});
+		//listener for delete, delete item from table
 		this.listenTo(this.Library, 'remove', (model) => {
 			this.deleteItem(model);
 		});
 	},
-
+	//buttons actions and error alert message
 	events: {
-		'submit': 'onSubmit', 'err': 'alertMe', 'click .edit': 'edit', 'click .delete': 'delete'
+		'submit': 'onSubmit', 'err': 'alertMe', 'click .delete': 'delete'
 	},
-
+	//save model on form submit
 	onSubmit: function (e) {
 		e.preventDefault();
 		let model = new this.BookModel({
-			//id : this.Library.models.length,
-			title: this.$('.title').val(),
-			author: this.$('.author').val(),
-			genre: this.$('.genre').val(),
-			summary: this.$('.summary').val()
+			title: this.$('form .title').val(),
+			author: this.$('form .author').val(),
+			genre: this.$('form .genre').val(),
+			summary: this.$('form .summary').val()
 		});
 		if ( ! model.isValid() ) {
 			this.err('Author format is probably wrong or there was a server problem');
 			return;
 		}
+		//keep a copy of this
 		let myThis = this;
 		model.save(null, {
 			success: function () {
@@ -42,22 +45,27 @@ app.MyApp = Backbone.View.extend({
 			}
 		});
 
-	}, edit: function (e) {
+	},
+	//delete model when delete button is clicked
+	delete: function (e) {
 		let id    = e.target.dataset.id;
 		let model = this.Library.get(id);
-		console.log(model);
-	}, delete: function (e) {
-		let id    = e.target.dataset.id;
-		let model = this.Library.get(id);
+		// use my delete method because in order to delete a id and a post_id is necessary
 		model.deleteFromSerialized();
 		this.Library.remove(model);
-	}, renderItem: function (model) {
+	},
+	// add item to table on create
+	renderItem: function (model) {
 		let item = new this.BookItem({model: model});
 		this.$('#book table').append(item.render().el);
-	}, deleteItem: function (model) {
+	},
+	//delete item from table on delete
+	deleteItem: function (model) {
 		let item = new this.BookItem({model: model});
 		this.$('#book table #book' + model.id).parent().remove();
-	},err: function (message) {
+	},
+	//just a simple error handling method
+	err: function (message) {
 		window.alert(message);
 	}
 });

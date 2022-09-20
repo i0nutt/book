@@ -12,8 +12,8 @@ add_action( 'rest_api_init', 'register_rest_routes' );
 add_shortcode( 'book', 'load_short_code' );
 add_action( 'template_redirect', 'add_id' );
 
-//registers my scripts
-function prefix_register_scripts(): void {
+//registers scripts
+function prefix_register_scripts() {
 	wp_register_script( 'backbone-localstorage', 'C:\wamp64\www\wp-local\wp-includes\js\backbone.js', array( 'backbone' ) );
 	wp_register_script(
 		'book-view-app',
@@ -28,7 +28,7 @@ function prefix_register_scripts(): void {
 	wp_register_script( 'book', plugins_url( 'book.js', __FILE__ ), array(), 0.1, true );
 }
 
-function prefix_enqueue_scripts(): void {
+function prefix_enqueue_scripts() {
 	wp_enqueue_script( 'backbone-localstorage' );
 	wp_enqueue_script( 'book-view-app' );
 	wp_enqueue_script( 'book-model' );
@@ -46,7 +46,7 @@ function register_rest_routes() {
 
 // a shortcode for adding an empty table into the page and a create item form
 // which will only be visible if you have the user has the rights to edit content
-function load_short_code(): void {
+function load_short_code() {
 	?>
     <div id='book-app'>
         <div id='book'>
@@ -81,7 +81,7 @@ function load_short_code(): void {
 }
 
 //adds the post id to a hidden input field in order to access it from backbone
-function add_id(): void {
+function add_id() {
 	$page_id = get_the_ID();
 	echo '<input type="hidden" id="get_page_id" value="' . $page_id . '">';
 }

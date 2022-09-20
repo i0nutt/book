@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/abstract-testcase.php';
-require_once __DIR__ . '/../bookAPI.php';
+require_once __DIR__ . '/../class-bookrestcontroller.php';
 
 class TestCreate extends LibraryUnitTest {
 	public function testGetBooksWrongRequest() {
