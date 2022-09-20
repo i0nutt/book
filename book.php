@@ -47,37 +47,21 @@ function register_rest_routes() {
 // a shortcode for adding an empty table into the page and a create item form
 // which will only be visible if you have the user has the rights to edit content
 function load_short_code() {
-	?>
-    <div id='book-app'>
-        <div id='book'>
-            <table>
-                <tr>
-                    <th>Title</th>
-                    <th>Author</th>
-                    <th>Genre</th>
-                    <th>Summary</th>
-                    <th>Actions</th>
-                </tr>
-            </table>
-			<?php
-			if ( is_user_logged_in() ) {
-				$user  = wp_get_current_user();
-				$roles = $user->roles;
-				if ( ! ( in_array( 'administrator', $roles ) || in_array( 'editor', $roles ) || in_array( 'author', $roles ) ) ) {
-					return;
-				}
-			}
-			?>
-            <form id='createBook' method='post'>
-                <input type='text' name='title' class='title' placeholder='Title' value='' required>
-                <input type='text' name='author' class='author' placeholder='Author' value='' required>
-                <input type='text' name='genre' class='genre' placeholder='Genre' value='' required>
-                <input type='text' name='summary' class='summary' placeholder='Summary' value='' required>
-                <button type='submit'>Create</button>
-            </form>
-        </div>
-    </div>
-	<?php
+	if ( is_user_logged_in() ) {
+		$user = wp_get_current_user();
+		if ( ! isset($user) ) {
+			return '';
+		}
+		$roles = $user->roles;
+		if ( ! ( in_array( 'administrator', $roles ) || in_array( 'editor', $roles ) || in_array( 'author', $roles ) ) ) {
+			ob_start();
+			include __DIR__ . '/utils/shortcode.html';
+			return ob_get_clean();
+		}
+	}
+	ob_start();
+	include __DIR__ . '/utils/shortcode_editor.html';
+	return ob_get_clean();
 }
 
 //adds the post id to a hidden input field in order to access it from backbone
