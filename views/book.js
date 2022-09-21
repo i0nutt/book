@@ -25,13 +25,13 @@ app.BookItem = Backbone.View.extend({
 	},
 	/**
 	 * Updates model using patch request, only one field will be submitted at a time when editing
-	 * @param e
+	 * @param event
 	 */
-	updateModel : function (e) {
+	updateModel : function (event) {
 		//save all potential patch data into a dictionary
 		let data     = {};
 		data.post_id = this.model.get('post_id');
-		switch (e.target.className) {
+		switch (event.target.className) {
 			case 'title' :
 				data.title = this.$('input.title').val();
 				break;

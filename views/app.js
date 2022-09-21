@@ -26,10 +26,10 @@ app.MyApp = Backbone.View.extend({
 	},
 	/**
 	 * Creates a model and saves it everywhere
-	 * @param e
+	 * @param event
 	 */
-	onSubmit: function (e) {
-		e.preventDefault();
+	onSubmit: function (event) {
+		event.preventDefault();
 		let model = new this.BookModel({
 			title: this.$('form .title').val(),
 			author: this.$('form .author').val(),
@@ -54,10 +54,10 @@ app.MyApp = Backbone.View.extend({
 	},
 	/**
 	 * Deletes a book on delete event
-	 * @param e
+	 * @param event
 	 */
-	delete: function (e) {
-		let id    = e.target.dataset.id;
+	delete: function (event) {
+		let id    = event.target.dataset.id;
 		let model = this.Library.get(id);
 		// use my delete method because in order to delete a id and a post_id is necessary
 		model.deleteFromSerialized();
