@@ -1,8 +1,12 @@
 <?php
 /**
- * Plugin Name: Book
- * Author: Ionut T.
+ * @wordpress-plugin
+ * Plugin Name:       Book List
+ * Description:       A plugin to manage a book list/post.
+ * Version:           0.1
+ * Author:            Ionut .T
  */
+
 
 //hooks executed by my plugin
 add_action( 'wp_enqueue_scripts', 'book_register_scripts' );
