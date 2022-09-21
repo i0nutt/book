@@ -1,3 +1,3 @@
 # book
-test-API not up to date with
-API controller so pls ignore errors from tests folder
+test-API not up to date with API controller
+Ignore errors from tests folder
