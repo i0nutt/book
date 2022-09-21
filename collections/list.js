@@ -1,15 +1,17 @@
-//var used to preserve current app
+//var used for global scope availability
 var app = app || {};
 $       = jQuery;
 
-//creating the library
+// noinspection JSVoidFunctionReturnValueUsed
 let Library = Backbone.Collection.extend(
 	{
 		model: app.BookModel,
 		initialize: function () {
 			this.load();
 		},
-		//get ajx request to load the data from wp post meta using post id in route
+		/**
+		 * Gets AJAX request to load the data from wp post meta using post id in route
+		 */
 		load: function () {
 			let library = this;
 			$.ajax(

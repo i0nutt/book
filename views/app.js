@@ -1,9 +1,13 @@
-$       = jQuery;
+//var used for global scope availability
 var app = app || {};
-//app, here is the main processing/event-handler place of the entire collection
+$       = jQuery;
+
+// noinspection JSVoidFunctionReturnValueUsed
 app.MyApp = Backbone.View.extend({
 	el: $('#book-app'),
-	//initialize the app view
+	/**
+	 * Initializes MyApp the app with models, views, collections and listeners
+	 */
 	initialize: function () {
 		this.Library   = app.Library;
 		this.BookModel = app.BookModel;
@@ -17,11 +21,13 @@ app.MyApp = Backbone.View.extend({
 			this.deleteItem(model);
 		});
 	},
-	//buttons actions and error alert message
 	events: {
 		'submit': 'onSubmit', 'err': 'alertMe', 'click .delete': 'delete'
 	},
-	//save model on form submit
+	/**
+	 * Creates a model and saves it everywhere
+	 * @param e
+	 */
 	onSubmit: function (e) {
 		e.preventDefault();
 		let model = new this.BookModel({
@@ -46,7 +52,10 @@ app.MyApp = Backbone.View.extend({
 		});
 
 	},
-	//delete model when delete button is clicked
+	/**
+	 * Deletes a book on delete event
+	 * @param e
+	 */
 	delete: function (e) {
 		let id    = e.target.dataset.id;
 		let model = this.Library.get(id);
@@ -54,17 +63,27 @@ app.MyApp = Backbone.View.extend({
 		model.deleteFromSerialized();
 		this.Library.remove(model);
 	},
-	// add item to table on create
+	/**
+	 * Appends a view for a book model to the table
+	 * @param model
+	 */
 	renderItem: function (model) {
 		let item = new this.BookItem({model: model});
 		this.$('#book table').append(item.render().el);
 	},
-	//delete item from table on delete
+	/**
+	 * Deletes a view from the table
+	 * @param model
+	 */
 	deleteItem: function (model) {
 		let item = new this.BookItem({model: model});
 		this.$('#book table #book' + model.id).parent().remove();
 	},
-	//just a simple error handling method
+	/**
+	 * Alerts with a message<br>
+	 * Used for simple error handling
+	 * @param message
+	 */
 	err: function (message) {
 		window.alert(message);
 	}

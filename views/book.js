@@ -1,5 +1,6 @@
+//var used for global scope availability
 var app = app || {};
-// view of one book
+// noinspection JSVoidFunctionReturnValueUsed
 app.BookItem = Backbone.View.extend({
 	//<tr> because I am inserting element in a table
 	tagName: 'tr',
@@ -7,7 +8,10 @@ app.BookItem = Backbone.View.extend({
 	events : {
 		"change input" : 'updateModel',
 	},
-	//render the html element corresponding to a book
+	/**
+	 * Renders the html for a book
+	 * @returns {app.BookItem}
+	 */
 	render: function () {
 		let data         = this.model.toJSON();
 		let html         = "<td id = 'book" + data.id + "'><input type='text' name = 'title' class = 'title' placeholder='Title' value='" + data.title + "' required></td>";
@@ -19,7 +23,10 @@ app.BookItem = Backbone.View.extend({
 		this.$el.append(html);
 		return this;
 	},
-	//update model using patch request, only one field will be submitted at a time when editing
+	/**
+	 * Updates model using patch request, only one field will be submitted at a time when editing
+	 * @param e
+	 */
 	updateModel : function (e) {
 		//save all potential patch data into a dictionary
 		let data     = {};

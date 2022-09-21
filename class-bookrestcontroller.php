@@ -1,11 +1,15 @@
 <?php
 
 class BookRestController extends WP_REST_Controller {
-
+	private $key_name;
 	public function __construct() {
 		$this->namespace = '/bookAPI/v1';
+		$this->key_name  = 'myBookApp';
 	}
-	//register all CRUD routes used
+	/**
+	 * Registers the CRUD routes for GET , PUT, PATCH and DELETE
+	 * @return void
+	 */
 	public function register_routes() {
 		//get all items
 		register_rest_route(
@@ -46,85 +50,117 @@ class BookRestController extends WP_REST_Controller {
 			)
 		);
 	}
-	//get all items
+	/**
+	 * Retrieves all items from the post meta in JSON format<br>
+	 *
+	 * @param array $request MUST have the key 'id'
+	 *
+	 * @return false|string The data in format JSON or FALSE if bad request
+	 */
 	public function get_items( $request ) {
-		if ( ! isset( $request['id'] ) ) {
+		if ( ! $this->validate_int( $request['id'] ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
-		$data = get_post_meta( $request['id'], 'myBookApp', true );
+		$data = get_post_meta( (int) $request['id'], $this->key_name, true );
 		if ( $data !== false ) {
 			$data = unserialize( $data, array( 'allowed_classes' => true ) );
 		}
 		return json_encode( $data );
 	}
-	//create one item, insert it at 'id' index in an assoc array
+	/**
+	 * Adds an item into the serialized array<br>
+	 * If the item with the specified id already exists it will be updated
+	 * @param array $request MUST have the following keys : 'id', 'post_id', 'title', 'author' 'genre' and 'summary'
+	 *                       for the operation to be successful
+	 * @return false|string Whether the operation was successful in JSON format
+	 */
 	public function create_item( $request ) {
-		//validations
-		if ( isset( $request['post_id'] ) ) {
-			$post_id = $request['post_id'];
+		if ( isset( $request['post_id'] ) && is_numeric( $request['post_id'] ) && ( (int) $request > 0 ) ) {
+			$post_id = (int) $request['post_id'];
 		} else {
-			return json_encode( array( 'success' => false ));
-		}
-		if ( ! (
-		isset( $request['title'], $request['author'], $request['genre'], $request['summary'], $request['id'] )
-		) ) {
 			return json_encode( array( 'success' => false ) );
 		}
-		//model is assoc array
+		if ( ! (
+			isset( $request['title'], $request['author'], $request['genre'], $request['summary'], $request['id'] )
+			) && ! is_numeric( $request['id'] ) ) {
+			return json_encode( array( 'success' => false ) );
+		}
 		$model = array(
-			'id'      => $request['id'],
-			'title'   => $request['title'],
-			'author'  => $request['author'],
-			'genre'   => $request['genre'],
-			'summary' => $request['summary'],
+			'id'      => (int) $request['id'],
+			'title'   => sanitize_text_field( $request['title'] ),
+			'author'  => sanitize_text_field( $request['author'] ),
+			'genre'   => sanitize_text_field( $request['genre'] ),
+			'summary' => sanitize_text_field( $request['summary'] ),
 		);
-		$data  = unserialize( get_post_meta( $post_id, 'myBookApp', true ), array( 'allowed_classes' => true ) );
+		$data  = unserialize( get_post_meta( $post_id, $this->key_name, true ), array( 'allowed_classes' => true ) );
 		if ( $data === false ) {
 			$data = array();
 		}
 		$data[ $model['id'] ] = $model;
 		$data                 = serialize( $data );
-		if ( ! update_post_meta( $post_id, 'myBookApp', $data ) ) {
-			return json_encode( array( 'success' => false ));
-		}
-
-		return json_encode( array( 'success' => true ) );
-	}
-	// update item given a few or all model parameters on the request, 'post_id' is mandatory
-	public function update_item( $request ) {
-		if ( ! isset( $request['id'] ) ) {
+		if ( ! update_post_meta( $post_id, $this->key_name, $data ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
-		$data = unserialize( get_post_meta( $request['post_id'], 'myBookApp', true ), array( 'allowed_classes' => true ) );
-		// inner model is used for cases where only certain fields must be changed
-		$inner_model = $data[ $request['id'] ];
+		return json_encode( array( 'success' => true ) );
+	}
+	/**
+	 * Updates only the specified fields of a book from the serialized array<br>
+	 *
+	 * @param array $request MUST have at least two keys, 'id' and 'post_id'
+	 *
+	 * @return false|string Whether the operation was successful or not as JSON
+	 */
+	public function update_item( $request ) {
+		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
+			return json_encode( array( 'success' => false ) );
+		}
+		$id      = (int) $request['id'];
+		$post_id = (int) $request['post_id'];
+		$data    = unserialize( get_post_meta( $post_id, $this->key_name, true ), array( 'allowed_classes' => true ) );
+		// inner model is used for cases where request doesn't have all fields
+		$inner_model = $data[ $id ];
 		$model       = array(
-			'id'      => $request['id'],
-			'title'   => isset($request['title']) ? $request['title'] : $inner_model['title'],
-			'author'  => isset($request['author']) ? $request['author'] : $inner_model['author'],
-			'genre'   => isset($request['genre']) ? $request['genre'] : $inner_model['genre'],
-			'summary' => isset($request['summary']) ? $request['summary'] : $inner_model['summary'],
+			'id'      => $id,
+			'title'   => isset( $request['title'] ) ? sanitize_text_field($request['title']) : $inner_model['title'],
+			'author'  => isset( $request['author'] ) ? sanitize_text_field($request['author']) : $inner_model['author'],
+			'genre'   => isset( $request['genre'] ) ? sanitize_text_field($request['genre']) : $inner_model['genre'],
+			'summary' => isset( $request['summary'] ) ? sanitize_text_field($request['summary']) : $inner_model['summary'],
 		);
 		//now add model into $data, serialize data then update the post meta
-		$data[ $request['id'] ] = $model;
-		$data                   = serialize( $data );
-		if ( ! update_post_meta( $request['post_id'], 'myBookApp', $data ) ) {
-			return json_encode( array( 'success' => false ));
-		}
-		return json_encode( array( 'success' => true ) );
-	}
-	//delete item from serialized array
-	public function delete_item( $request ) {
-		if ( ! isset( $request['id'] ) ) {
+		$data[ $id ] = $model;
+		$data        = serialize( $data );
+		if ( ! update_post_meta( $post_id, $this->key_name, $data ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
-		$data = unserialize( get_post_meta( $request['post_id'], 'myBookApp', true ), array( 'allowed_classes' => true ) );
+		return json_encode( array( 'success' => true ) );
+	}
+	/**
+	 * Deletes one item from the serialized array<br>
+	 *
+	 * @param array $request  MUST have two keys 'id' and 'post_id'
+	 *
+	 * @return false|string Whether the operation was successful as JSON
+	 */
+	public function delete_item( $request ) {
+		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
+			return json_encode( array( 'success' => false ) );
+		}
+		$data = unserialize( get_post_meta( (int) $request['post_id'], $this->key_name, true ), array( 'allowed_classes' => true ) );
 		unset( $data[ (int) $request['id'] ] );
 		$data = serialize( $data );
-		if ( ! update_post_meta( $request['post_id'], 'myBookApp', $data ) ) {
-			return json_encode( array( 'success' => false ));
+		if ( ! update_post_meta( (int) $request['post_id'], $this->key_name, $data ) ) {
+			return json_encode( array( 'success' => false ) );
 		}
 		return json_encode( array( 'success' => true ) );
 	}
-
+	/**
+	 * Check if the given parameter is a valid integer
+	 *
+	 * @param mixed $value the value to be checked
+	 *
+	 * @return bool Whether the input is a valid integer
+	 */
+	private function validate_int( $value ) {
+		return isset( $value ) && is_numeric( $value ) && ( (int) $value !== 0 );
+	}
 }
