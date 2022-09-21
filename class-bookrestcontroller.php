@@ -75,7 +75,7 @@ class BookRestController extends WP_REST_Controller {
 	 * @return false|string Whether the operation was successful in JSON format
 	 */
 	public function create_item( $request ) {
-		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
+		if ( $this->validate_int($request['id']) || $this->validate_int($request['post_id']) ) {
 			$post_id = (int) $request['post_id'];
 		} else {
 			return json_encode( array( 'success' => false ) );
