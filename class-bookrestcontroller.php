@@ -1,10 +1,10 @@
 <?php
 
 class BookRestController extends WP_REST_Controller {
-	private $key_name;
+	private $meta_key;
 	public function __construct() {
 		$this->namespace = '/bookAPI/v1';
-		$this->key_name  = 'myBookApp';
+		$this->meta_key  = 'myBookApp';
 	}
 	/**
 	 * Registers the CRUD routes for GET , PUT, PATCH and DELETE
@@ -61,7 +61,7 @@ class BookRestController extends WP_REST_Controller {
 		if ( ! $this->validate_int( $request['id'] ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
-		$data = get_post_meta( (int) $request['id'], $this->key_name, true );
+		$data = get_post_meta( (int) $request['id'], $this->meta_key, true );
 		if ( $data !== false ) {
 			$data = unserialize( $data, array( 'allowed_classes' => true ) );
 		}
@@ -92,13 +92,13 @@ class BookRestController extends WP_REST_Controller {
 			'genre'   => sanitize_text_field( $request['genre'] ),
 			'summary' => sanitize_text_field( $request['summary'] ),
 		);
-		$data  = unserialize( get_post_meta( $post_id, $this->key_name, true ), array( 'allowed_classes' => true ) );
+		$data  = unserialize( get_post_meta( $post_id, $this->meta_key, true ), array( 'allowed_classes' => true ) );
 		if ( $data === false ) {
 			$data = array();
 		}
 		$data[ $model['id'] ] = $model;
 		$data                 = serialize( $data );
-		if ( ! update_post_meta( $post_id, $this->key_name, $data ) ) {
+		if ( ! update_post_meta( $post_id, $this->meta_key, $data ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
 		return json_encode( array( 'success' => true ) );
@@ -116,7 +116,7 @@ class BookRestController extends WP_REST_Controller {
 		}
 		$id      = (int) $request['id'];
 		$post_id = (int) $request['post_id'];
-		$data    = unserialize( get_post_meta( $post_id, $this->key_name, true ), array( 'allowed_classes' => true ) );
+		$data    = unserialize( get_post_meta( $post_id, $this->meta_key, true ), array( 'allowed_classes' => true ) );
 		// inner model is used for cases where request doesn't have all fields
 		$inner_model = $data[ $id ];
 		$model       = array(
@@ -129,7 +129,7 @@ class BookRestController extends WP_REST_Controller {
 		//now add model into $data, serialize data then update the post meta
 		$data[ $id ] = $model;
 		$data        = serialize( $data );
-		if ( ! update_post_meta( $post_id, $this->key_name, $data ) ) {
+		if ( ! update_post_meta( $post_id, $this->meta_key, $data ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
 		return json_encode( array( 'success' => true ) );
@@ -145,10 +145,10 @@ class BookRestController extends WP_REST_Controller {
 		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
 			return json_encode( array( 'success' => false ) );
 		}
-		$data = unserialize( get_post_meta( (int) $request['post_id'], $this->key_name, true ), array( 'allowed_classes' => true ) );
+		$data = unserialize( get_post_meta( (int) $request['post_id'], $this->meta_key, true ), array( 'allowed_classes' => true ) );
 		unset( $data[ (int) $request['id'] ] );
 		$data = serialize( $data );
-		if ( ! update_post_meta( (int) $request['post_id'], $this->key_name, $data ) ) {
+		if ( ! update_post_meta( (int) $request['post_id'], $this->meta_key, $data ) ) {
 			return json_encode( array( 'success' => false ) );
 		}
 		return json_encode( array( 'success' => true ) );
