@@ -9,7 +9,7 @@ app.BookModel = Backbone.Model.extend(
 			global += 1;
 		},
 		/**
-		 * 	Sets url path for API requests
+		 * Sets url path for API requests
 		 */
 		url : function () {
 			return document.location.origin + '/wp-json/bookAPI/v1/book/' + this.get( "id" );

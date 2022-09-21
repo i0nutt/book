@@ -75,14 +75,14 @@ class BookRestController extends WP_REST_Controller {
 	 * @return false|string Whether the operation was successful in JSON format
 	 */
 	public function create_item( $request ) {
-		if ( isset( $request['post_id'] ) && is_numeric( $request['post_id'] ) && ( (int) $request > 0 ) ) {
+		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
 			$post_id = (int) $request['post_id'];
 		} else {
 			return json_encode( array( 'success' => false ) );
 		}
 		if ( ! (
-			isset( $request['title'], $request['author'], $request['genre'], $request['summary'], $request['id'] )
-			) && ! is_numeric( $request['id'] ) ) {
+			isset( $request['title'], $request['author'], $request['genre'], $request['summary'] )
+			) ) {
 			return json_encode( array( 'success' => false ) );
 		}
 		$model = array(
