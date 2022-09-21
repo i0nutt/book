@@ -4,7 +4,8 @@ require_once __DIR__ . '/../class-bookrestcontroller.php';
 
 class TestCreate extends LibraryUnitTest {
 	public function testGetBooksWrongRequest() {
-		$this->assertFalse( getBooks( array() ) );
+		$api = new BookRestController();
+		$this->assert( $api->get_items( new WP_REST_Request() ) , '{"success":false}');
 	}
 
 	public function test_get_values() {
