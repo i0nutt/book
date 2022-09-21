@@ -12,7 +12,9 @@ add_action( 'rest_api_init', 'register_rest_routes' );
 add_shortcode( 'book', 'load_short_code' );
 add_action( 'template_redirect', 'add_id' );
 
-//registers scripts
+/**
+ * @return void
+ */
 function prefix_register_scripts() {
 	wp_register_script( 'backbone-localstorage', 'C:\wamp64\www\wp-local\wp-includes\js\backbone.js', array( 'backbone' ) );
 	wp_register_script(
