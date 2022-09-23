@@ -75,9 +75,12 @@ function load_short_code() {
 			include __DIR__ . '/utils/shortcode.html';
 			return ob_get_clean();
 		}
+		ob_start();
+		include __DIR__ . '/utils/shortcode_editor.html';
+		return ob_get_clean();
 	}
 	ob_start();
-	include __DIR__ . '/utils/shortcode_editor.html';
+	include __DIR__ . '/utils/shortcode.html';
 	return ob_get_clean();
 }
 

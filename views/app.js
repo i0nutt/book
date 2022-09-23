@@ -45,9 +45,9 @@ app.MyApp = Backbone.View.extend({
 		model.save(null, {
 			success: function () {
 				myThis.Library.add(model);
-			}
-		}, {
+			},
 			error: function () {
+				myThis.err('Bad input, check that your fields have only letters');
 			}
 		});
 

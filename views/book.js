@@ -45,6 +45,10 @@ app.BookItem = Backbone.View.extend({
 				data.summary = this.$('input.summary').val();
 				break;
 		}
-		this.model.save(data, {patch : true});
+		this.model.save(data, {patch : true ,
+			error: function () {
+				app.err('Bad input, check that your fields have only letters');
+			}
+		});
 	}
 });

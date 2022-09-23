@@ -2,9 +2,11 @@
 
 class BookRestController extends WP_REST_Controller {
 	private $meta_key;
+	private $cap;
 	public function __construct() {
 		$this->namespace = '/bookAPI/v1';
 		$this->meta_key  = 'myBookApp';
+		$this->cap       = current_user_can( 'edit_posts' );
 	}
 	/**
 	 * Registers the CRUD routes for GET , PUT, PATCH and DELETE
@@ -17,8 +19,11 @@ class BookRestController extends WP_REST_Controller {
 			//notice, /books/post_id is the route, books plural, the ones after this will be at singular
 			'/books/(?P<id>\d+)',
 			array(
-				'methods'  => WP_REST_Server::READABLE,
-				'callback' => array( $this, 'get_items' ),
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_items' ),
+				'permission_callback' => function () {
+					return true;
+				},
 			)
 		);
 		//since the data is kept in a serialized array, put method used on create
@@ -26,8 +31,13 @@ class BookRestController extends WP_REST_Controller {
 			$this->namespace,
 			'/book/(?P<id>\d+)',
 			array(
-				'methods'  => 'PUT',
-				'callback' => array( $this, 'create_item' ),
+				array(
+					'methods'             => 'PUT',
+					'callback'            => array( $this, 'create_item' ),
+					'permission_callback' => function () {
+						return $this->cap;
+					},
+				),
 			)
 		);
 		//patch for edit, not all fields must be sent
@@ -35,8 +45,11 @@ class BookRestController extends WP_REST_Controller {
 			$this->namespace,
 			'/book/(?P<id>\d+)',
 			array(
-				'methods'  => 'PATCH',
-				'callback' => array( $this, 'update_item' ),
+				'methods'             => 'PATCH',
+				'callback'            => array( $this, 'update_item' ),
+				'permission_callback' => function () {
+					return $this->cap;
+				},
 			)
 		);
 		//delete item
@@ -45,8 +58,11 @@ class BookRestController extends WP_REST_Controller {
 			//use id and post_id as request parameters since both are needed in the current format
 			'/book/(?P<id>\d+)&(?P<post_id>\d+)',
 			array(
-				'methods'  => 'DELETE',
-				'callback' => array( $this, 'delete_item' ),
+				'methods'             => 'DELETE',
+				'callback'            => array( $this, 'delete_item' ),
+				'permission_callback' => function () {
+					return $this->cap;
+				},
 			)
 		);
 	}
@@ -59,6 +75,7 @@ class BookRestController extends WP_REST_Controller {
 	 */
 	public function get_items( $request ) {
 		if ( ! $this->validate_int( $request['id'] ) ) {
+			http_response_code(400);
 			return json_encode( array( 'success' => false ) );
 		}
 		$data = get_post_meta( (int) $request['id'], $this->meta_key, true );
@@ -75,22 +92,29 @@ class BookRestController extends WP_REST_Controller {
 	 * @return false|string Whether the operation was successful in JSON format
 	 */
 	public function create_item( $request ) {
-		if ( $this->validate_int($request['id']) || $this->validate_int($request['post_id']) ) {
+		$request->sanitize_params();
+		if ( $this->validate_int( $request['id'] ) || $this->validate_int( $request['post_id'] ) ) {
 			$post_id = (int) $request['post_id'];
 		} else {
-			return json_encode( array( 'success' => false ) );
+			http_response_code(400);
+			return null;
 		}
 		if ( ! (
-			isset( $request['title'], $request['author'], $request['genre'], $request['summary'] )
-			) ) {
-			return json_encode( array( 'success' => false ) );
+		isset( $request['title'], $request['author'], $request['genre'], $request['summary'] )
+		) ) {
+			http_response_code(400);
+			return null;
+		}
+		if ( ! $this->validate_request_params( $request ) ) {
+			http_response_code(400);
+			return null;
 		}
 		$model = array(
 			'id'      => (int) $request['id'],
-			'title'   => sanitize_text_field( $request['title'] ),
-			'author'  => sanitize_text_field( $request['author'] ),
-			'genre'   => sanitize_text_field( $request['genre'] ),
-			'summary' => sanitize_text_field( $request['summary'] ),
+			'title'   => $request['title'],
+			'author'  => $request['author'],
+			'genre'   => $request['genre'],
+			'summary' => $request['summary'],
 		);
 		$data  = unserialize( get_post_meta( $post_id, $this->meta_key, true ), array( 'allowed_classes' => true ) );
 		if ( $data === false ) {
@@ -99,7 +123,8 @@ class BookRestController extends WP_REST_Controller {
 		$data[ $model['id'] ] = $model;
 		$data                 = serialize( $data );
 		if ( ! update_post_meta( $post_id, $this->meta_key, $data ) ) {
-			return json_encode( array( 'success' => false ) );
+			http_response_code(400);
+			return null;
 		}
 		return json_encode( array( 'success' => true ) );
 	}
@@ -111,8 +136,15 @@ class BookRestController extends WP_REST_Controller {
 	 * @return false|string Whether the operation was successful or not as JSON
 	 */
 	public function update_item( $request ) {
+		$request->sanitize_params();
+		//var_dump($request['author']);die; working on allowing names like O'hara
 		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
-			return json_encode( array( 'success' => false ) );
+			http_response_code(400);
+			return null;
+		}
+		if ( ! $this->validate_request_params($request) ) {
+			http_response_code(400);
+			return null;
 		}
 		$id      = (int) $request['id'];
 		$post_id = (int) $request['post_id'];
@@ -121,10 +153,10 @@ class BookRestController extends WP_REST_Controller {
 		$inner_model = $data[ $id ];
 		$model       = array(
 			'id'      => $id,
-			'title'   => isset( $request['title'] ) ? sanitize_text_field($request['title']) : $inner_model['title'],
-			'author'  => isset( $request['author'] ) ? sanitize_text_field($request['author']) : $inner_model['author'],
-			'genre'   => isset( $request['genre'] ) ? sanitize_text_field($request['genre']) : $inner_model['genre'],
-			'summary' => isset( $request['summary'] ) ? sanitize_text_field($request['summary']) : $inner_model['summary'],
+			'title'   => isset( $request['title'] ) ? $request['title'] : $inner_model['title'],
+			'author'  => isset( $request['author'] ) ? $request['author'] : $inner_model['author'],
+			'genre'   => isset( $request['genre'] ) ? $request['genre'] : $inner_model['genre'],
+			'summary' => isset( $request['summary'] ) ? $request['summary'] : $inner_model['summary'],
 		);
 		//now add model into $data, serialize data then update the post meta
 		$data[ $id ] = $model;
@@ -162,5 +194,20 @@ class BookRestController extends WP_REST_Controller {
 	 */
 	private function validate_int( $value ) {
 		return isset( $value ) && is_numeric( $value ) && ( (int) $value !== 0 );
+	}
+	private function validate_request_params( $request ) {
+		if ( isset( $request['title'] ) && preg_match( '#^[a-zA-Z\s]+$#', $request['title'] ) === 0 ) {
+			return false;
+		}
+		if ( isset( $request['author'] ) && preg_match( '#^[a-zA-Z\s]+$#', $request['author'] ) === 0 ) {
+			return false;
+		}
+		if ( isset( $request['genre'] ) && preg_match( '#^[a-zA-Z\s]+$#', $request['genre'] ) === 0 ) {
+			return false;
+		}
+		if ( isset( $request['summary'] ) && preg_match( '#^[a-zA-Z\s]+$#', $request['summary'] ) === 0 ) {
+			return false;
+		}
+		return true;
 	}
 }
