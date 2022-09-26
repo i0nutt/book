@@ -1,18 +1,16 @@
 //vars used for global scope availability
-var app    = app || {};
-var global = 1;
+var app = app || {};
 // noinspection JSVoidFunctionReturnValueUsed
 app.BookModel = Backbone.Model.extend(
 	{
-		initialize : function () {
-			this.set( 'id', global );
-			global += 1;
+		initialize : function (options) {
+			console.log(options);
 		},
 		/**
 		 * Sets url path for API requests
 		 */
 		url : function () {
-			return document.location.origin + '/wp-json/bookAPI/v1/book/' + this.get( "id" );
+			return document.location.origin + '/wp-json/bookAPI/v1/book';
 		},
 		/**
 		 * Default values<br>

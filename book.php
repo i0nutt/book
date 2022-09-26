@@ -12,9 +12,9 @@
 add_action( 'wp_enqueue_scripts', 'book_register_scripts' );
 add_action( 'wp_enqueue_scripts', 'book_enqueue_scripts' );
 add_action( 'init', 'rest_api_init' );
-add_action( 'rest_api_init', 'register_rest_routes' );
-add_shortcode( 'book', 'load_short_code' );
-add_action( 'template_redirect', 'add_id' );
+add_action( 'rest_api_init', 'book_register_rest_routes' );
+add_shortcode( 'book', 'book_load_short_code' );
+add_action( 'template_redirect', 'book_add_id' );
 
 /**
  * Registers the scripts from the book plugin
@@ -31,7 +31,11 @@ function book_register_scripts() {
 	);
 	wp_register_script( 'book-model', plugins_url( 'models/book.js', __FILE__ ), array(), 0.1, true );
 	wp_register_script( 'book-collection', plugins_url( 'collections/list.js', __FILE__ ), array( 'book-model' ), 0.1, true );
-	wp_register_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
+	if ( current_user_can( 'edit_posts' ) ) {
+		wp_register_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
+	} else {
+		wp_register_script( 'book-view-view', plugins_url( 'views/book-no-edit.js', __FILE__ ), array(), 0.1, true );
+	}
 	wp_register_script( 'book', plugins_url( 'book.js', __FILE__ ), array(), 0.1, true );
 }
 
@@ -52,7 +56,7 @@ function book_enqueue_scripts() {
  * Creates a rest controller instance and registers the routes
  * @return void
  */
-function register_rest_routes() {
+function book_register_rest_routes() {
 	include( __DIR__ . '/class-bookrestcontroller.php' );
 	$controller = new BookRESTController();
 	$controller->register_routes();
@@ -63,7 +67,7 @@ function register_rest_routes() {
  * The shortcode is either an empty table or empty table and create form
  * @return false|string The proper HTML depending on the user rights as string
  */
-function load_short_code() {
+function book_load_short_code() {
 	if ( is_user_logged_in() ) {
 		$user = wp_get_current_user();
 		if ( ! isset($user) ) {
@@ -88,7 +92,7 @@ function load_short_code() {
  * Echo's a hidden input field containing the current page id
  * @return void
  */
-function add_id() {
+function book_add_id() {
 	$page_id = get_the_ID();
 	echo '<input type="hidden" id="get_page_id" value="' . $page_id . '">';
 }

@@ -20,18 +20,16 @@ let Library = Backbone.Collection.extend(
 					type: 'get',
 					data: {},
 					success: function (response) {
-						response = JSON.parse(response);
+						console.log(response);
 						if (response === false) {
 							return;
 						}
 						//assoc array, need for this kind of for
 						for (let key in response) {
-								let book = response[key];
-								//used to find a non-used id
-								global    = Math.max(global,book.id);
+								let book  = response[key];
 								let model = new app.BookModel(
 									{
-										id: book.id,
+										id: key,
 										title: book.title,
 										author: book.author,
 										genre: book.genre,
