@@ -6,6 +6,9 @@ $       = jQuery;
 let Library = Backbone.Collection.extend(
 	{
 		model: app.BookModel,
+		/**
+		 * The collection gets loaded from the DB on initialize
+		 */
 		initialize: function () {
 			this.load();
 		},
@@ -20,7 +23,6 @@ let Library = Backbone.Collection.extend(
 					type: 'get',
 					data: {},
 					success: function (response) {
-						console.log(response);
 						if (response === false) {
 							return;
 						}

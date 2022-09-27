@@ -26,21 +26,53 @@ class BookRestController extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_items' ),
-				'permission_callback' => function () {
-					return true;
-				},
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'validate_callback' => array( $this, 'validate_int' ),
+					),
+				),
 			)
 		);
-		//since the data is kept in a serialized array, put method used on create
 		register_rest_route(
 			$this->namespace,
-			'/book/(?P<id>\d+)',
+			'/book',
 			array(
 				array(
 					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_item' ),
 					'permission_callback' => array( $this, 'get_user_can_edit' ),
-					'args',
+					'args'                => array(
+						'post_id' => array(
+							'required'          => true,
+							'validate_callback' => array( $this, 'validate_int' ),
+						),
+						'title'   => array(
+							'required'          => true,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => array( $this, 'validate_request_param_name' ),
+						),
+						'author'  => array(
+							'required'          => true,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => array( $this, 'validate_request_param_name' ),
+						),
+						'genre'   => array(
+							'required'          => true,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => array( $this, 'validate_request_param_name' ),
+						),
+						'summary' => array(
+							'required'          => true,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => array( $this, 'validate_request_param_text' ),
+						),
+					),
 				),
 			)
 		);
@@ -51,9 +83,41 @@ class BookRestController extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::EDITABLE,
 				'callback'            => array( $this, 'update_item' ),
-				'permission_callback' => function () {
-					return $this->user_can_edit;
-				},
+				'permission_callback' => array( $this, 'get_user_can_edit' ),
+				'args'                => array(
+					'id'      => array(
+						'required'          => true,
+						'validate_callback' => array( $this, 'validate_int' ),
+					),
+					'post_id' => array(
+						'required'          => true,
+						'validate_callback' => array( $this, 'validate_int' ),
+					),
+					'title'   => array(
+						'required'          => false,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => array( $this, 'validate_request_param_name' ),
+					),
+					'author'  => array(
+						'required'          => false,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => array( $this, 'validate_request_param_name' ),
+					),
+					'genre'   => array(
+						'required'          => false,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => array( $this, 'validate_request_param_name' ),
+					),
+					'summary' => array(
+						'required'          => false,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => array( $this, 'validate_request_param_text' ),
+					),
+				),
 			)
 		);
 		//delete item
@@ -64,9 +128,17 @@ class BookRestController extends WP_REST_Controller {
 			array(
 				'methods'             => WP_REST_Server::DELETABLE,
 				'callback'            => array( $this, 'delete_item' ),
-				'permission_callback' => function () {
-					return $this->user_can_edit;
-				},
+				'permission_callback' => array( $this, 'get_user_can_edit' ),
+				'args'                => array(
+					'id'      => array(
+						'required'          => true,
+						'validate_callback' => array( $this, 'validate_int' ),
+					),
+					'post_id' => array(
+						'required'          => true,
+						'validate_callback' => array( $this, 'validate_int' ),
+					),
+				),
 			)
 		);
 	}
@@ -83,23 +155,12 @@ class BookRestController extends WP_REST_Controller {
 			$response->set_status(400);
 			return $response;
 		}
-		$data    = get_post_meta( (int) $request['id'], self::META_KEY, true );
-		$escaped = [];
+		$data   = get_post_meta( (int) $request['id'], self::META_KEY, true );
+		$output = [];
 		foreach ( $data as $key => $book ) {
-			$book['title']   = esc_html( $book['title'] );
-			$book['author']  = esc_html( $book['author'] );
-			$book['genre']   = esc_html( $book['genre'] );
-			$book['summary'] = esc_html( $book['summary'] );
-			//
-			$escaped[ $book['id'] ] = array(
-				'id'      => $key,
-				'title'   => $book['title'],
-				'author'  => $book['author'],
-				'genre'   => $book['genre'],
-				'summary' => $book['summary'],
-			);
+			$output[ $key ] = $this->escape_html($book);
 		}
-		$response->set_data($escaped);
+		$response->set_data($output);
 		return $response;
 	}
 	/**
@@ -110,75 +171,60 @@ class BookRestController extends WP_REST_Controller {
 	 * @return WP_REST_Response Whether the operation was successful in JSON format
 	 */
 	public function create_item( $request ) {
-		$request->sanitize_params();
 		$response = new WP_REST_Response();
-		if ( $this->validate_int( $request['post_id'] ) ) {
-			$post_id = (int) $request['post_id'];
-		} else {
-			$response->set_status(400);
-			return $response;
-		}
-		if ( ! ( isset( $request['title'], $request['author'], $request['genre'], $request['summary'] ) ) || ! $this->validate_request_params( $request ) ) {
-			$response->set_status( 400 );
-			return $response;
-		}
-		$next_id = 1;
-		$data    = get_post_meta( $post_id, self::META_KEY, true );
+		$next_id  = 1;
+		$data     = get_post_meta( $request->get_param('post_id'), self::META_KEY, true );
 		foreach ( $data as $key => $book ) {
 			$next_id = max( $key, $next_id );
 		}
 		$model = array(
 			'id'      => $next_id + 1,
-			'title'   => $request['title'],
-			'author'  => $request['author'],
-			'genre'   => $request['genre'],
-			'summary' => $request['summary'],
+			'title'   => $request->get_param('title'),
+			'author'  => $request->get_param('author'),
+			'genre'   => $request->get_param('genre'),
+			'summary' => $request->get_param('summary'),
 		);
 		if ( $data === false ) {
 			$data = array();
 		}
 		$data[ $model['id'] ] = $model;
-		if ( ! update_post_meta( $post_id, self::META_KEY, $data ) ) {
+		if ( ! update_post_meta( $request->get_param('post_id'), self::META_KEY, $data ) ) {
 			$response->set_status(400);
 		}
-		$response->set_data($model);
+		$response->set_data($this->escape_html($model));
 		return $response;
 	}
 	/**
-	 * Updates only the specified fields of a book from the serialized array<br>
+	 * Updates only the specified fields of a book from the serialized array
 	 *
 	 * @param WP_REST_Request $request MUST have at least two keys, 'id' and 'post_id'
 	 *
 	 * @return WP_REST_Response Whether the operation was successful or not as JSON
 	 */
 	public function update_item( $request ) {
-		$request->sanitize_params();
 		$response = new WP_REST_Response();
-		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) || ! $this->validate_request_params($request) ) {
-			$response->set_status(400);
-			return $response;
-		}
-		$id      = (int) $request['id'];
-		$post_id = (int) $request['post_id'];
-		$data    = get_post_meta( $post_id, self::META_KEY, true );
+		$id       = (int) $request->get_param('id');
+		$post_id  = (int) $request->get_param('post_id');
+		$data     = get_post_meta( $post_id, self::META_KEY, true );
 		// inner model is used for cases where request doesn't have all fields
 		$inner_model = $data[ $id ];
 		$model       = array(
 			'id'      => $id,
-			'title'   => isset( $request['title'] ) ? $request['title'] : $inner_model['title'],
-			'author'  => isset( $request['author'] ) ? $request['author'] : $inner_model['author'],
-			'genre'   => isset( $request['genre'] ) ? $request['genre'] : $inner_model['genre'],
-			'summary' => isset( $request['summary'] ) ? $request['summary'] : $inner_model['summary'],
+			'title'   => $request->get_param( 'title' ) !== null ? $request->get_param('title') : $inner_model['title'],
+			'author'  => $request->get_param( 'author' ) !== null ? $request->get_param('author') : $inner_model['author'],
+			'genre'   => $request->get_param( 'genre' ) !== null ? $request->get_param('genre') : $inner_model['genre'],
+			'summary' => $request->get_param( 'summary' ) !== null ? $request->get_param('summary') : $inner_model['summary'],
 		);
 		//now add model into $data, serialize data then update the post meta
 		$data[ $id ] = $model;
 		if ( ! update_post_meta( $post_id, self::META_KEY, $data ) ) {
 			$response->set_status(400);
 		}
+		$response->set_data($this->escape_html($model));
 		return $response;
 	}
 	/**
-	 * Deletes one item from the serialized array<br>
+	 * Deletes one item from the serialized array
 	 *
 	 * @param WP_REST_Request $request  MUST have two keys 'id' and 'post_id'
 	 *
@@ -186,17 +232,16 @@ class BookRestController extends WP_REST_Controller {
 	 */
 	public function delete_item( $request ) {
 		$response = new WP_REST_Response();
-		if ( ! $this->validate_int($request['id']) || ! $this->validate_int($request['post_id']) ) {
-			$response->set_status(400);
-			return $response;
-		}
-		$data = get_post_meta( (int) $request['post_id'], self::META_KEY, true );
+		$data     = get_post_meta( (int) $request->get_param('post_id'), self::META_KEY, true );
 		unset( $data[ (int) $request['id'] ] );
-		if ( ! update_post_meta( (int) $request['post_id'], self::META_KEY, $data ) ) {
+		if ( ! update_post_meta( (int) $request->get_param('post_id'), self::META_KEY, $data ) ) {
 			$response->set_status(400);
 		}
 		return $response;
 	}
+	/** Getter for user_can_edit property
+	 * @return bool Whether the user can edit
+	 */
 	public function get_user_can_edit() {
 		return $this->user_can_edit;
 	}
@@ -207,25 +252,56 @@ class BookRestController extends WP_REST_Controller {
 	 *
 	 * @return bool Whether the input is a valid integer
 	 */
-	private function validate_int( $value ) {
+	public function validate_int( $value ) {
 		return isset( $value ) && is_numeric( $value ) && ( (int) $value !== 0 );
 	}
-	private function validate_request_params( $request ) {
+	/** Checks whether a request parameter is a valid name
+	 * @param string $param  The value to be validated
+	 *
+	 * @return bool Whether $param is a valid name
+	 */
+	public function validate_request_param_name( $param ) {
 		$name_reg = '#^[a-zA-Z\s\'.]+$#';
+		return $this->validate_param($param, $name_reg);
+	}
+	/** Checks whether a request parameter is a valid text
+	 * @param string $param  The value to be validated
+	 *
+	 * @return bool Whether $param is a valid name
+	 */
+	public function validate_request_param_text( $param ) {
 		$text_reg = '#^[a-zA-Z\d\s\'.,]+$#';
-		$valid    = true;
-		if ( isset( $request['title'] ) && preg_match( $name_reg, $request['title'] ) === 0 ) {
-			$valid = false;
-		}
-		if ( isset( $request['author'] ) && preg_match( $name_reg, $request['author'] ) === 0 ) {
-			$valid = false;
-		}
-		if ( isset( $request['genre'] ) && preg_match( $name_reg, $request['genre'] ) === 0 ) {
-			$valid = false;
-		}
-		if ( isset( $request['summary'] ) && preg_match( $text_reg, $request['summary'] ) === 0 ) {
+		return $this->validate_param($param, $text_reg);
+	}
+	/** Checks whether a set param is valid
+	 * @param string $param The value to be validated
+	 * @param string $regex The regex against which $param will be validated
+	 *
+	 * @return bool whether $param is valid against the regex given
+	 */
+	public function validate_param( $param, $regex ) {
+		$valid = true;
+		if ( isset( $param ) && preg_match( $regex, $param ) === 0 ) {
 			$valid = false;
 		}
 		return $valid;
+	}
+	/** Returns the item html escaped
+	 * @param array $item Book model to be escaped
+	 *
+	 * @return array The escaped book model
+	 */
+	private function escape_html( $item ) {
+		$item['title']   = esc_html( $item['title'] );
+		$item['author']  = esc_html( $item['author'] );
+		$item['genre']   = esc_html( $item['genre'] );
+		$item['summary'] = esc_html( $item['summary'] );
+		return array(
+			'id'      => $item['id'],
+			'title'   => $item['title'],
+			'author'  => $item['author'],
+			'genre'   => $item['genre'],
+			'summary' => $item['summary'],
+		);
 	}
 }

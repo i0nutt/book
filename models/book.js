@@ -4,13 +4,16 @@ var app = app || {};
 app.BookModel = Backbone.Model.extend(
 	{
 		initialize : function (options) {
-			console.log(options);
 		},
 		/**
 		 * Sets url path for API requests
 		 */
-		url : function () {
-			return document.location.origin + '/wp-json/bookAPI/v1/book';
+		url: function () {
+			let myURL = document.location.origin + '/wp-json/bookAPI/v1/book';
+			if (this.id) {
+				myURL += '/' + this.id;
+			}
+			return myURL;
 		},
 		/**
 		 * Default values<br>
