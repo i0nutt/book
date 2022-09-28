@@ -9,7 +9,6 @@
 
 
 //hooks executed by my plugin
-add_action( 'wp_enqueue_scripts', 'book_register_scripts' );
 add_action( 'wp_enqueue_scripts', 'book_enqueue_scripts' );
 add_action( 'init', 'rest_api_init' );
 add_action( 'rest_api_init', 'book_register_rest_routes' );
@@ -20,38 +19,33 @@ add_action( 'template_redirect', 'book_add_id' );
  * Registers the scripts from the book plugin
  * @return void
  */
-function book_register_scripts() {
-	wp_register_script( 'backbone', includes_url('\js\backbone.js'), array( 'backbone' ) );
-	wp_register_script(
+function book_enqueue_scripts() {
+	//
+	wp_enqueue_script( 'backbone', includes_url('\js\backbone.js'), array( 'backbone' ) );
+
+	wp_enqueue_script(
 		'book-view-app',
 		plugins_url( 'views/app.js', __FILE__ ),
 		array( 'book-collection', 'book-view-view' ),
 		0.1,
 		true
 	);
-	wp_register_script( 'book-model', plugins_url( 'models/book.js', __FILE__ ), array(), 0.1, true );
-	wp_register_script( 'book-collection', plugins_url( 'collections/list.js', __FILE__ ), array( 'book-model' ), 0.1, true );
+	wp_enqueue_script( 'book-model', plugins_url( 'models/book.js', __FILE__ ), array(), 0.1, true );
+	wp_enqueue_script( 'book-collection', plugins_url( 'collections/list.js', __FILE__ ), array( 'book-model' ), 0.1, true );
+
 	if ( current_user_can( 'edit_posts' ) ) {
-		wp_register_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
+		wp_enqueue_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
 	} else {
-		wp_register_script( 'book-view-view', plugins_url( 'views/book-no-edit.js', __FILE__ ), array(), 0.1, true );
+		wp_enqueue_script( 'book-view-view', plugins_url( 'views/book-no-edit.js', __FILE__ ), array(), 0.1, true );
 	}
-	wp_register_script( 'book', plugins_url( 'book.js', __FILE__ ), array(), 0.1, true );
+
+	wp_enqueue_script( 'book', plugins_url( 'book.js', __FILE__ ), array(), 0.1, true );
 }
 
 /**
  * Enqueues the scripts from book plugin
  * @return void
  */
-function book_enqueue_scripts() {
-	wp_enqueue_script( 'backbone' );
-	wp_enqueue_script( 'book-view-app' );
-	wp_enqueue_script( 'book-model' );
-	wp_enqueue_script( 'book-collection' );
-	wp_enqueue_script( 'book-view-view' );
-	wp_enqueue_script( 'book' );
-}
-
 /**
  * Creates a rest controller instance and registers the routes
  * @return void
@@ -74,15 +68,18 @@ function book_load_short_code() {
 			return '';
 		}
 		$roles = $user->roles;
+
 		if ( ! ( in_array( 'administrator', $roles ) || in_array( 'editor', $roles ) || in_array( 'author', $roles ) ) ) {
 			ob_start();
 			include __DIR__ . '/utils/shortcode.html';
 			return ob_get_clean();
 		}
+
 		ob_start();
 		include __DIR__ . '/utils/shortcode_editor.html';
 		return ob_get_clean();
 	}
+
 	ob_start();
 	include __DIR__ . '/utils/shortcode.html';
 	return ob_get_clean();

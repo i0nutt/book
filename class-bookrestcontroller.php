@@ -35,6 +35,7 @@ class BookRestController extends WP_REST_Controller {
 				),
 			)
 		);
+		//post for create
 		register_rest_route(
 			$this->namespace,
 			'/book',
@@ -142,25 +143,30 @@ class BookRestController extends WP_REST_Controller {
 			)
 		);
 	}
+
 	/**
 	 * Retrieves all items from the post meta in JSON format<br>
 	 *
-	 * @param array $request MUST have the key 'id'
+	 * @param WP_REST_Request $request MUST have the key 'id'
 	 *
 	 * @return WP_REST_Response The data in format JSON or FALSE if bad request
 	 */
 	public function get_items( $request ) {
 		$response = new WP_REST_Response();
-		if ( ! $this->validate_int( $request['id'] ) ) {
-			$response->set_status(400);
+		if ( ! $this->validate_int( $request->get_param( 'id' ) ) ) {
+			$response->set_status( 400 );
+
 			return $response;
 		}
-		$data   = get_post_meta( (int) $request['id'], self::META_KEY, true );
+
+		$data   = get_post_meta( (int) $request->get_param( 'id' ), self::META_KEY, true );
 		$output = [];
+
 		foreach ( $data as $key => $book ) {
-			$output[ $key ] = $this->escape_html($book);
+			$output[ $key ] = $this->escape_html( $book );
 		}
-		$response->set_data($output);
+		$response->set_data( $output );
+
 		return $response;
 	}
 	/**
@@ -177,6 +183,7 @@ class BookRestController extends WP_REST_Controller {
 		foreach ( $data as $key => $book ) {
 			$next_id = max( $key, $next_id );
 		}
+
 		$model = array(
 			'id'      => $next_id + 1,
 			'title'   => $request->get_param('title'),
@@ -184,14 +191,17 @@ class BookRestController extends WP_REST_Controller {
 			'genre'   => $request->get_param('genre'),
 			'summary' => $request->get_param('summary'),
 		);
+
 		if ( $data === false ) {
 			$data = array();
 		}
 		$data[ $model['id'] ] = $model;
+
 		if ( ! update_post_meta( $request->get_param('post_id'), self::META_KEY, $data ) ) {
 			$response->set_status(400);
 		}
 		$response->set_data($this->escape_html($model));
+
 		return $response;
 	}
 	/**
@@ -215,12 +225,14 @@ class BookRestController extends WP_REST_Controller {
 			'genre'   => $request->get_param( 'genre' ) !== null ? $request->get_param('genre') : $inner_model['genre'],
 			'summary' => $request->get_param( 'summary' ) !== null ? $request->get_param('summary') : $inner_model['summary'],
 		);
+
 		//now add model into $data, serialize data then update the post meta
 		$data[ $id ] = $model;
 		if ( ! update_post_meta( $post_id, self::META_KEY, $data ) ) {
 			$response->set_status(400);
 		}
 		$response->set_data($this->escape_html($model));
+
 		return $response;
 	}
 	/**
@@ -233,6 +245,7 @@ class BookRestController extends WP_REST_Controller {
 	public function delete_item( $request ) {
 		$response = new WP_REST_Response();
 		$data     = get_post_meta( (int) $request->get_param('post_id'), self::META_KEY, true );
+
 		unset( $data[ (int) $request['id'] ] );
 		if ( ! update_post_meta( (int) $request->get_param('post_id'), self::META_KEY, $data ) ) {
 			$response->set_status(400);
@@ -284,6 +297,7 @@ class BookRestController extends WP_REST_Controller {
 		if ( isset( $param ) && preg_match( $regex, $param ) === 0 ) {
 			$valid = false;
 		}
+
 		return $valid;
 	}
 	/** Returns the item html escaped
@@ -292,16 +306,6 @@ class BookRestController extends WP_REST_Controller {
 	 * @return array The escaped book model
 	 */
 	private function escape_html( $item ) {
-		$item['title']   = esc_html( $item['title'] );
-		$item['author']  = esc_html( $item['author'] );
-		$item['genre']   = esc_html( $item['genre'] );
-		$item['summary'] = esc_html( $item['summary'] );
-		return array(
-			'id'      => $item['id'],
-			'title'   => $item['title'],
-			'author'  => $item['author'],
-			'genre'   => $item['genre'],
-			'summary' => $item['summary'],
-		);
+		return array_map( 'esc_html', $item );
 	}
 }
