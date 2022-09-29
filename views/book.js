@@ -29,22 +29,9 @@ app.BookItem = Backbone.View.extend({
 	 */
 	updateModel : function (event) {
 		//save all potential patch data into a dictionary
-		let data     = {};
-		data.post_id = this.model.get('post_id');
-		switch (event.target.className) {
-			case 'title' :
-				data.title = this.$('input.title').val();
-				break;
-			case 'author' :
-				data.author = this.$('input.author').val();
-				break;
-			case 'genre' :
-				data.genre = this.$('input.genre').val();
-				break;
-			case 'summary' :
-				data.summary = this.$('input.summary').val();
-				break;
-		}
+		let data                = {};
+		data.post_id            = this.model.get('post_id');
+		data[event.target.name] = event.target.value;
 		this.model.save(data, {patch : true ,
 			error: function (response) {
 				app.err('Bad input, check that your fields have only letters');

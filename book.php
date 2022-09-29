@@ -62,26 +62,12 @@ function book_register_rest_routes() {
  * @return false|string The proper HTML depending on the user rights as string
  */
 function book_load_short_code() {
-	if ( is_user_logged_in() ) {
-		$user = wp_get_current_user();
-		if ( ! isset($user) ) {
-			return '';
-		}
-		$roles = $user->roles;
-
-		if ( ! ( in_array( 'administrator', $roles ) || in_array( 'editor', $roles ) || in_array( 'author', $roles ) ) ) {
-			ob_start();
-			include __DIR__ . '/utils/shortcode.html';
-			return ob_get_clean();
-		}
-
-		ob_start();
-		include __DIR__ . '/utils/shortcode_editor.html';
-		return ob_get_clean();
+	$file = 'shortcode.html';
+	if ( current_user_can( 'edit_posts' ) ) {
+		$file = 'shortcode_editor.html';
 	}
-
 	ob_start();
-	include __DIR__ . '/utils/shortcode.html';
+	include __DIR__ . '/utils/' . $file;
 	return ob_get_clean();
 }
 
