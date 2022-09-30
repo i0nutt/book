@@ -37,21 +37,5 @@ app.BookModel = Backbone.Model.extend(
 				return "author must be a valid name";
 			}
 		},
-		/**
-		 * AJAX request to delete element from the serialized post meta field<br>
-		 */
-		deleteFromSerialized : function () {
-			let book = this;
-			$.ajax(
-				{
-					//The url has two parameters, book id and post id, both are needed for deletion of a book
-					url: document.location.origin + '/wp-json/bookAPI/v1/book/' + book.get('id') + '&' + book.get('post_id'),
-					type: 'delete',
-					success: function (response) {
-						app.Library.remove(book);
-					}
-				}
-			);
-		}
 	}
 );
