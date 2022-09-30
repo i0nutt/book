@@ -32,14 +32,14 @@ app.MyApp = Backbone.View.extend({
 	 */
 	onSubmit: function (event) {
 		event.preventDefault();
-		let model = new this.BookModel({
+		let model = new app.BookModel({
 			title: this.$('form .title').val(),
 			author: this.$('form .author').val(),
 			genre: this.$('form .genre').val(),
 			summary: this.$('form .summary').val()
 		});
 		if ( ! model.isValid() ) {
-			this.err('Author format is probably wrong or there was a server problem');
+			this.err(BookGlobalText.text.invalidAuthor);
 			return;
 		}
 		//keep a copy of this
@@ -49,7 +49,7 @@ app.MyApp = Backbone.View.extend({
 				myThis.Library.add(model);
 			},
 			error: function () {
-				myThis.err('Bad input, check that your fields have only letters');
+				myThis.err(BookGlobalText.text.badInput);
 			}
 		});
 
@@ -70,7 +70,7 @@ app.MyApp = Backbone.View.extend({
 	 * @param model
 	 */
 	renderItem: function (model) {
-		let item = new this.BookItem({model: model});
+		let item = new app.BookItem({model: model});
 		this.$('#book table').append(item.render().el);
 	},
 	/**
@@ -78,7 +78,7 @@ app.MyApp = Backbone.View.extend({
 	 * @param model
 	 */
 	deleteItem: function (model) {
-		let item = new this.BookItem({model: model});
+		let item = new app.BookItem({model: model});
 		this.$('#book table #book' + model.id).parent().remove();
 	},
 	/**

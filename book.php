@@ -47,21 +47,33 @@ function book_enqueue_scripts() {
 	include( __DIR__ . '/class-bookservice.php' );
 	$data = BookService::get_items( get_the_ID() );
 
-	wp_localize_script(
-		'book-collection',
-		'Book_Info',
-		array(
-			'post_id' => get_the_ID(),
-			'data'    => $data,
-		)
-	);
-
 	if ( current_user_can( 'edit_posts' ) ) {
 		wp_enqueue_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
 	} else {
 		wp_enqueue_script( 'book-view-view', plugins_url( 'views/book-no-edit.js', __FILE__ ), array(), 0.1, true );
 	}
 	wp_enqueue_script( 'book', plugins_url( 'book.js', __FILE__ ), array(), 0.1, true );
+	//localize error messages
+	wp_localize_script(
+		'book',
+		'BookGlobalText',
+		array(
+			'text' => array(
+				'invalidAuthor'      => 'author must be a valid name',
+				'maybeInvalidAuthor' => 'Author format is probably wrong or there was a server problem',
+				'badInput'           => 'Bad input, check that your fields have only letters',
+			),
+		)
+	);
+	//localize book data
+	wp_localize_script(
+		'book',
+		'Book_Info',
+		array(
+			'post_id' => get_the_ID(),
+			'data'    => $data,
+		)
+	);
 }
 
 /**
