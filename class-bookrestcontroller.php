@@ -266,7 +266,7 @@ class BookRestController extends WP_REST_Controller {
 	 * @return bool Whether the input is a valid integer
 	 */
 	public function validate_int( $value ) {
-		return isset( $value ) && is_numeric( $value ) && ( (int) $value !== 0 );
+		return ! empty( $value ) && is_numeric( $value );
 	}
 	/** Checks whether a request parameter is a valid name
 	 * @param string $param  The value to be validated
