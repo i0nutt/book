@@ -20,6 +20,8 @@ app.MyApp = Backbone.View.extend({
 		this.listenTo(this.Library, 'remove', (model) => {
 			this.deleteItem(model);
 		});
+		//load localized data
+		this.load();
 	},
 	events: {
 		'submit': 'onSubmit', 'err': 'alertMe', 'click .delete': 'delete'
@@ -59,9 +61,9 @@ app.MyApp = Backbone.View.extend({
 	delete: function (event) {
 		let id    = event.target.dataset.id;
 		let model = this.Library.get(id);
-		// use my delete method because in order to delete a id and a post_id is necessary
-		model.deleteFromSerialized();
-		this.Library.remove(model);
+		// custom url for destroy, id + post_id are needed
+		let destroyUrl = document.location.origin + '/wp-json/bookAPI/v1/book/' + id + '/' + Book_Info.post_id;
+		model.destroy( { url: destroyUrl});
 	},
 	/**
 	 * Appends a view for a book model to the table
@@ -86,5 +88,23 @@ app.MyApp = Backbone.View.extend({
 	 */
 	err: function (message) {
 		window.alert(message);
+	},
+	/**
+	 * Populates the collection with localized data
+	 */
+	load : function (){
+		for (let key in Book_Info.data) {
+			let book  = Book_Info.data[key];
+			let model = new app.BookModel(
+				{
+					id: key,
+					title: book.title,
+					author: book.author,
+					genre: book.genre,
+					summary: book.summary
+				}
+			);
+			this.Library.add(model);
+		}
 	}
 });

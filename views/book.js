@@ -13,12 +13,11 @@ app.BookItem = Backbone.View.extend({
 	 * @returns {app.BookItem}
 	 */
 	render: function () {
-		let data         = this.model.toJSON();
-		let html         = "<td id = 'book" + data.id + "'><input type='text' name = 'title' class = 'title' placeholder='Title' value='" + data.title + "' required></td>";
-		html            += "<td><input type ='text'  name = 'author'  class = 'author'  placeholder = 'author'  value = ' " + data.author + " ' required></td>";
-		html            += "<td><input type ='text'  name = 'genre'   class = 'genre'   placeholder = 'Genre'   value = ' " + data.genre + " ' required></td>";
-		html            += "<td><input type = 'text' name = 'summary' class = 'summary' placeholder = 'Summary' value = ' " + data.summary + " ' required></td>";
-		let deleteButton = "<button class = 'delete' data-id = " + data.id + "> Delete </button>";
+		let html         = "<td id = 'book" + this.model.get('id') + "'><input type='text' name = 'title' class = 'title' placeholder='Title' value='" + this.model.get('title') + "' required></td>";
+		html            += "<td><input type ='text'  name = 'author'  class = 'author'  placeholder = 'author'  value = ' " + this.model.get('author') + " ' required></td>";
+		html            += "<td><input type ='text'  name = 'genre'   class = 'genre'   placeholder = 'Genre'   value = ' " + this.model.get('genre') + " ' required></td>";
+		html            += "<td><input type = 'text' name = 'summary' class = 'summary' placeholder = 'Summary' value = ' " + this.model.get('summary') + " ' required></td>";
+		let deleteButton = "<button class = 'delete' data-id = " + this.model.get('id') + "> Delete </button>";
 		html            += "<td>" + deleteButton + "</td>";
 		this.$el.append(html);
 		return this;

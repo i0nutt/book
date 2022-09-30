@@ -28,7 +28,11 @@ class BookRestController extends WP_REST_Controller {
 				'callback'            => array( $this, 'get_items' ),
 				'permission_callback' => '__return_true',
 				'args'                => array(
-					'id' => array(
+					'id'      => array(
+						'required'          => true,
+						'validate_callback' => array( $this, 'validate_int' ),
+					),
+					'post_id' => array(
 						'required'          => true,
 						'validate_callback' => array( $this, 'validate_int' ),
 					),
@@ -125,21 +129,18 @@ class BookRestController extends WP_REST_Controller {
 		register_rest_route(
 			$this->namespace,
 			//use id and post_id as request parameters since both are needed in the current format
-			'/book/(?P<id>\d+)&(?P<post_id>\d+)',
+			'/book/(?P<id>\d+)/(?P<post_id>\d+)',
 			array(
 				'methods'             => WP_REST_Server::DELETABLE,
 				'callback'            => array( $this, 'delete_item' ),
 				'permission_callback' => array( $this, 'get_user_can_edit' ),
 				'args'                => array(
-					'id'      => array(
-						'required'          => true,
-						'validate_callback' => array( $this, 'validate_int' ),
-					),
-					'post_id' => array(
+					'id' => array(
 						'required'          => true,
 						'validate_callback' => array( $this, 'validate_int' ),
 					),
 				),
+				'header'              => 'post_id : post_id',
 			)
 		);
 	}
@@ -155,7 +156,6 @@ class BookRestController extends WP_REST_Controller {
 		$response = new WP_REST_Response();
 		if ( ! $this->validate_int( $request->get_param( 'id' ) ) ) {
 			$response->set_status( 400 );
-
 			return $response;
 		}
 

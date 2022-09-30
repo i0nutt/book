@@ -20,7 +20,7 @@ app.BookModel = Backbone.Model.extend(
 		 * post_id is by default the id of the current book instance
 		 */
 		defaults: {
-			post_id : jQuery( '#get_page_id' ).val(),
+			post_id : Book_Info.post_id,
 			title: '',
 			author: '',
 			genre: '',
