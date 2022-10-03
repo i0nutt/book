@@ -26,7 +26,9 @@ function book_enqueue_scripts() {
 		0.1,
 		true
 	);
+
 	wp_enqueue_script( 'book-model', plugins_url( 'models/book.js', __FILE__ ), array( 'backbone' ), 0.1, true );
+
 	wp_localize_script(
 		'book-model',
 		'Book_Info',
@@ -43,15 +45,23 @@ function book_enqueue_scripts() {
 		0.1,
 		true
 	);
-
-	include( __DIR__ . '/class-bookservice.php' );
-	$data = BookService::get_items( get_the_ID() );
-
-	if ( current_user_can( 'edit_posts' ) ) {
-		wp_enqueue_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
-	} else {
-		wp_enqueue_script( 'book-view-view', plugins_url( 'views/book-no-edit.js', __FILE__ ), array(), 0.1, true );
+	//different file depending on user rights
+	$file = 'bookItemTemplate.html';
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		$file = 'bookItemTemplate-no-edit.html';
 	}
+
+	wp_enqueue_script( 'book-view-view', plugins_url( 'views/book.js', __FILE__ ), array(), 0.1, true );
+	ob_start();
+	include __DIR__ . '/utils/' . $file;
+	wp_localize_script(
+		'book-view-view',
+		'BookItem',
+		array(
+			'HTMLtemplate' => ob_get_clean(),
+		)
+	);
+
 	wp_enqueue_script( 'book', plugins_url( 'book.js', __FILE__ ), array(), 0.1, true );
 	//localize error messages
 	wp_localize_script(
@@ -65,6 +75,8 @@ function book_enqueue_scripts() {
 			),
 		)
 	);
+	include( __DIR__ . '/class-bookservice.php' );
+	$data = BookService::get_items( get_the_ID() );
 	//localize book data
 	wp_localize_script(
 		'book',

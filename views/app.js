@@ -78,7 +78,7 @@ app.MyApp = Backbone.View.extend({
 	 * @param model
 	 */
 	deleteItem: function (model) {
-		let item = new app.BookItem({model: model});
+		new app.BookItem({model: model});
 		this.$('#book table #book' + model.id).parent().remove();
 	},
 	/**
@@ -104,6 +104,7 @@ app.MyApp = Backbone.View.extend({
 					summary: book.summary
 				}
 			);
+			console.log(model);
 			this.Library.add(model);
 		}
 	}

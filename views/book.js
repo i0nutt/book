@@ -8,17 +8,13 @@ app.BookItem = Backbone.View.extend({
 	events : {
 		"change input" : 'updateModel',
 	},
+	template: _.template(BookItem.HTMLtemplate),
 	/**
 	 * Renders the html for a book
 	 * @returns {app.BookItem}
 	 */
 	render: function () {
-		let html         = "<td id = 'book" + this.model.get('id') + "'><input type='text' name = 'title' class = 'title' placeholder='Title' value='" + this.model.get('title') + "' required></td>";
-		html            += "<td><input type ='text'  name = 'author'  class = 'author'  placeholder = 'author'  value = ' " + this.model.get('author') + " ' required></td>";
-		html            += "<td><input type ='text'  name = 'genre'   class = 'genre'   placeholder = 'Genre'   value = ' " + this.model.get('genre') + " ' required></td>";
-		html            += "<td><input type = 'text' name = 'summary' class = 'summary' placeholder = 'Summary' value = ' " + this.model.get('summary') + " ' required></td>";
-		let deleteButton = "<button class = 'delete' data-id = " + this.model.get('id') + "> Delete </button>";
-		html            += "<td>" + deleteButton + "</td>";
+		let html = this.template((this.model.attributes));
 		this.$el.append(html);
 		return this;
 	},
@@ -32,7 +28,7 @@ app.BookItem = Backbone.View.extend({
 		data.post_id            = this.model.get('post_id');
 		data[event.target.name] = event.target.value;
 		this.model.save(data, {patch : true ,
-			error: function (response) {
+			error: function () {
 				app.err('Bad input, check that your fields have only letters');
 			}
 		});
