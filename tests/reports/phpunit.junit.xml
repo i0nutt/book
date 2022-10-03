@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="book" tests="3" assertions="0" errors="3" failures="0" skipped="0" time="0.007271">
+    <testsuite name="TestCreate" file="C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php" tests="3" assertions="0" errors="3" failures="0" skipped="0" time="0.007271">
+      <testcase name="testGetBooksWrongRequest" class="TestCreate" classname="TestCreate" file="C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php" line="6" assertions="0" time="0.005308">
+        <error type="Error">TestCreate::testGetBooksWrongRequest
+Error: Call to undefined method TestCreate::assertEqual()
+
+C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php:8
+phpvfscomposer://C:\Users\WinAdmin\AppData\Roaming\Composer\vendor\phpunit\phpunit\phpunit:60
+</error>
+      </testcase>
+      <testcase name="test_get_values" class="TestCreate" classname="TestCreate" file="C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php" line="11" assertions="0" time="0.001088">
+        <error type="Error">TestCreate::test_get_values
+Error: Call to undefined function createBook()
+
+C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php:22
+phpvfscomposer://C:\Users\WinAdmin\AppData\Roaming\Composer\vendor\phpunit\phpunit\phpunit:60
+</error>
+      </testcase>
+      <testcase name="testCreateBook" class="TestCreate" classname="TestCreate" file="C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php" line="28" assertions="0" time="0.000875">
+        <error type="Error">TestCreate::testCreateBook
+Error: Call to undefined function createBook()
+
+C:\wamp64\www\wp-local\wp-content\plugins\book\tests\test-API.php:39
+phpvfscomposer://C:\Users\WinAdmin\AppData\Roaming\Composer\vendor\phpunit\phpunit\phpunit:60
+</error>
+      </testcase>
+    </testsuite>
+  </testsuite>
+</testsuites>
